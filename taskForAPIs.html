@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>json-and-ajax</title>
+</head>
+<body>
+    
+<header>
+    <h1>TRY SOMETHING</h1>
+    <button id="btn">Fetch info for 3 new Animals</button>
+</header>
+
+<div id="animal-info"></div>
+
+
+<script src="js/app.js"></script>
+
+
+<!-- 
+========================================================================================
+    задание от задачи
+========================================================================================
+от Юлия >>
+
+1. Като се логна в профила и отида до 
+http://192.168.10.190:8080/bg/users/orders/rik/ - списъка с всички поръчки, които съм направила
+
+--снимка от една секция за поръчки където има  текст и бутон--
+
+Бутон Преглед го правим на половина като дължина и до него правим нов бутон , със същата височина понеже в секцията има и други полета. 
+Бутона се казва Cutting plan  при избор сваля на текущия компютър файловете които са качени към поръчката и са с тип = 1 , за това е и филтъра
+Ако няма нито един файл да изведе модал с коректно съобщение За избраната заявка няма добавен Cutting plan
+<<
+
+========================================================================================
+========================================================================================
+ от СТАНИ >>   
+жълтото, малко по-горе
+
+вече има 
+.url_cp
+
+на него правиш ajax GET
+резултата е error.tranport
+в него са списъка с файловете
+горе в жълтото не е е описан случая в който има повече от един файл
+-ако няма нито един, изкарваш съобщение че няма планове
+-ако има само един отваряш линка на файла който се връща от ajax get
+-ако има повече от един, показваш в прозорец някакъв списъка и потребителя да избере какво да отвори
+<<
+
+========================================================================================
+коментар от мен
+========================================================================================
+Във .url_cp има реално url примерно "http://localhost:8080/bg/users/orders/rik/cp/1270/"
+
+а вътре в урл адреса има json: 
+
+	
+tranport	
+    pdf :	[]
+    jpg	:   []
+    word : > /*предполагам и това е за квадратни скоби []	
+        0 : >	
+            image_url : 	"http://localhost:8080/tools/doc/accept/00024548/Ekran_prodajba.docx/"
+            image_path :	"00024548"
+            image_real_name :	"ekran-prodajba.docx"
+            image_ime : 	""
+            id :	17
+            tip :	0
+            first : 	false
+            timeins :	1698404591758
+        excel :	[]
+        video :	[]
+    error_code :	0
+    error_text :	""
+    add_info :	  ""
+
+========================================================================================
+========================================================================================
+-->
+				
+<!--   >>user_order_rik_list.html<< 
+     <script> 
+    var url_cp = [[${url_cp}]];
+    console.log(url_cp);
+    document.getElementById('cuttingPlan').addEventListener('click', function() {
+        console.log('chatito');
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url_cp, true);
+        console.log('here');
+        console.log(url_cp);
+        xhr.onload = function() {
+            if (xhr.status >= 200 && xhr.status < 400) {
+                var data = JSON.parse(xhr.responseText);
+                console.log(data);
+            } else {
+                console.error('Error:', xhr.status, xhr.statusText);
+            }
+        };
+
+        xhr.onerror = function() {
+            console.error('Network error occurred');
+        };
+
+        xhr.send();
+    });
+
+</script> -->
+
+<script th:inline="javascript">
+    $('.cutting-plan').on('click', function(e) {
+        var url = this.href;
+        e.preventDefault();
+
+
+        function _9uTAc_showMessage(textHtml/*, titleHtml*/) {
+            var $_9uTAc_message = $('#_9uTAc_message')
+            //$_9uTAc_message.find('[data-text=9uTAc-title]').text(titleHtml || 'Грешка');
+            $_9uTAc_message.find('[data-text=9uTAc-text]').html(textHtml);
+
+            $_9uTAc_message.show();$('body').css('overflow','hidden');
+        }
+        
+        function _9uTAc_showList(aList/*, titleHtml*/) {
+            var $_9uTAc_list = $('#_9uTAc_list')
+            // $_9uTAc_list.find('[data-text=9uTAc-title]').text(titleHtml || 'Изберете линк за сваляне');
+
+            var body = $_9uTAc_list.find('[data-html=9uTAc-body]');
+            body.html('');
+
+            $(aList.map(o => {
+                var a = $(`<a>`);
+                a.attr('href', o.url);
+                a.attr('target', '_blank');
+                a.text(o.text);
+                return a[0];
+            })).appendTo(body);
+
+            $_9uTAc_list.show();$('body').css('overflow','hidden');
+        }
+        
+        
+
+        $.ajax(url).done(data => {
+            try {
+                if (data.error_code) {
+                    _9uTAc_showMessage(
+                        '<strong>'+ [[${web_text_alerts_error}]] + ' ' + data.error_code + ':</strong> ' + data.error_text + '.'
+                    );
+                    return;
+                }
+
+                var links = Object.values(data.tranport).flat();
+                //console.debug('_9uTAc: links=', links);
+
+                if (1 < links.length) {
+                    _9uTAc_showList(links.map( a => ({url: a.image_url, text: a.image_real_name }) ));
+                } else if ( 1 === links.length ) {
+                    open(links[0].image_url);
+                } else if ( 0 === links.length ) {
+                    _9uTAc_showMessage('За избраната заявка няма добавен Cutting plan', ' ');
+                } else {
+                    throw 0
+                }
+            
+                
+            } catch (_) {
+                _9uTAc_showMessage('Друга грешка.');
+            }
+        }).fail(function(jqXHR) {
+            _9uTAc_showMessage( 'Нещо се обърка' + (jqXHR.status ? ' (HTTP '+jqXHR.status+')' : '') );
+        });
+    });
+    </script>
+
+
+<div
+    id="_9uTAc_message" class="modal custom-modal profile-data-modal"
+    tabindex="-1" role="dialog" aria-labelledby="edit_delivery_data_Label"
+    style="display:none;background: #0009;" onclick="if(this !== event.target)return; $(this).hide(); $('body').css('overflow','')"
+>
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="$(this).closest('.modal').hide()"><span aria-hidden="true">&times;</span></button>
+                <p class="pdm-title" data-text="9uTAc-title">Cutting plan</p>
+            </div>
+            <div class="modal-body">
+                <span data-text="9uTAc-text"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div
+    id="_9uTAc_list" class="modal custom-modal profile-data-modal"
+    tabindex="-1" role="dialog" aria-labelledby="edit_delivery_data_Label"
+    style="display:none;background: #0009;" onclick="if(this !== event.target)return; $(this).hide(); $('body').css('overflow','')"
+>
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="$(this).closest('.modal').hide();$('body').css('overflow','')"><span aria-hidden="true">&times;</span></button>
+                <p class="pdm-title" data-text="9uTAc-title">Cutting plan</p>
+            </div>
+            <div class="modal-body" data-html="9uTAc-body" style="display:flex; flex-direction: column; gap: 5px">
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+
+<!-- 
+
+========================================================================================
+    това е от Задачи за един AI няколко апита в едно SOF_96936
+========================================================================================
+
+
+
+Integrate Releva in 12 easy steps.
+
+Step 1: On each page
+	 - ще отнеме 5 часа
+Step 2: On product pages
+	 - ще отнеме 2 часа
+Step 3: On the product listing page -
+	 Дали ще им е нужно това? - трябва всеки филтър да се опише 
+	-ще отнеме 8 часа
+Step 4: On search and search result pages -
+	-същото се прави като при стъпка 3 само някакво куери да се добави
+	-ще отнеме 30мин (Денис каза 5мин принципно, аз/Василия/ казвам 30 мин)
+Step 5: On checkout success pages
+	- При успешна поръчка - преглед на количка
+	-ще отнеме 5 часа
+Step 6: Register service worker (Optional)
+	 -известия на телефона
+	 - няма достатъчно инфо в документацията 
+Step 7: Ensure data protection compliance
+	- няма достатъчно инфо в документацията 
+Step 8: Call the poduct update API call when changes in your catalogue occur
+	-това е за Стани (ако се върне за Денис - ще отнеме 8 часа)
+Step 9: Call the cart paid API when a customer places an order
+	-за количката, направена поръчка
+	-това е за Стани (ако се върне за Денис - ще отнеме 3 часа)
+Step 10: Implement the periodical product sync API
+	- май е за сървъра - не пише в документацията - това е за Стани
+Step 11: Send subscribes and unsubscribes to Releva
+	-това е за Стани
+Step 12: Send newly registered users to Releva.
+	-това е за Стани
+
+от Денис: 20 часа и 30 мин или 
++ 11часа - тези може Стани да ги прави и да са по-малко -
+- това са от 8 и 9-та стъпка с тях става общо -
+31 часа и 30 мин
+
+и остава Стани да каже колко часа му трябват 
+
+
+---------------vasi   Nov 7, 2023 4:51:44 PM      ( на сървъра: 07.11.23 )
+
+3. ще трябва, не пише да е опционално
+те и еником имат мисля само 3 фиксирани филтъра
+
+6. само се регистрира скрипта според мен и това е( както са го дали )
+{
+    serviceWorkerUrl: '/service-worker.min.js'
+  }
+
+
+7. казали са, да се сложи скрипта ако сме с гдпр, нещо което сме, т.е. слгаме скрипта
+
+ hasConsent: function() {
+      return Releva.getCookie('cookielaw') === '1';
+    }
+
+8.  това е сложно
+на практика казват че трябва да следим всяко изменение на наличността( има/ няма) и цената
+и ако такова да им пратим артикула
+
+10ина  часа ще трябват в ЮВ при това
+с това тия разбират кога има изменение в продуктите, преди някой клиент да посети 
+съответния продукт на сайта
+
+
+9.   3 часа
+10. 5часа
+
+11. това зависи дали Еником го искат
+дали това releva да известява по мейл и телефон клиента за разни неща
+
+ако го искат  6 часа
+
+12. 3 часа
+
+
+
+не видях има ли среда в която можем да тестваме това което правим?
+
+---------------stan   Nov 8, 2023 9:41:23 AM      ( на сървъра: 08.11.23 )
+
+Писах на Цвети, по тези сметки отиваме на към 60+ часа. 
+
+
+---------------Yulia   08.11.2023 10:09:48      ( на сървъра: 08.11.23 )
+
+
+====================================================================================
+====================================================================================
+Integrate Releva in 12 easy steps.
+
+Step 1: On each page
+	 - ще отнеме 5 часа
+Step 2: On product pages
+	 - ще отнеме 2 часа
+Step 3: On the product listing page -
+	 Дали ще им е нужно това? - трябва всеки филтър да се опише 
+	-ще отнеме 8 часа
+
+    >>3. ще трябва, не пише да е опционално
+     >>   те и еником имат мисля само 3 фиксирани филтъра
+
+Step 4: On search and search result pages -
+	-същото се прави като при стъпка 3 само някакво куери да се добави
+	-ще отнеме 30мин (Денис каза 5мин принципно, аз/Василия/ казвам 30 мин)
+Step 5: On checkout success pages
+	- При успешна поръчка - преглед на количка
+	-ще отнеме 5 часа
+Step 6: Register service worker (Optional)
+	 -известия на телефона
+	 - няма достатъчно инфо в документацията 
+
+        >>6. само се регистрира скрипта според мен и това е( както са го дали )
+        >>{
+        >>    serviceWorkerUrl: '/service-worker.min.js'
+        >> }
+
+
+Step 7: Ensure data protection compliance
+	- няма достатъчно инфо в документацията 
+
+    >>7. казали са, да се сложи скрипта ако сме с гдпр, нещо което сме, т.е. слгаме скрипта
+
+      >>  hasConsent: function() {
+        >>    return Releva.getCookie('cookielaw') === '1';
+          >>  }
+
+Step 8: Call the poduct update API call when changes in your catalogue occur
+	-това е за Стани (ако се върне за Денис - ще отнеме 8 часа)
+
+    >>8.  това е сложно
+        >>на практика казват че трябва да следим всяко изменение на наличността( има/ няма) и цената
+        >>и ако такова да им пратим артикула
+
+
+Step 9: Call the cart paid API when a customer places an order
+	-за количката, направена поръчка
+	-това е за Стани (ако се върне за Денис - ще отнеме 3 часа)
+    >>9.   3 часа
+
+Step 10: Implement the periodical product sync API
+	- май е за сървъра - не пише в документацията - това е за Стани
+    >>10. 5часа
+
+Step 11: Send subscribes and unsubscribes to Releva
+	-това е за Стани
+        >>11. това зависи дали Еником го искат
+        >>дали това releva да известява по мейл и телефон клиента за разни неща
+
+        >>ако го искат  6 часа
+
+Step 12: Send newly registered users to Releva.
+	-това е за Стани
+        >>12. 3 часа
+        
+от Денис: 20 часа и 30 мин или 
++ 11часа - тези може Стани да ги прави и да са по-малко -
+- това са от 8 и 9-та стъпка с тях става общо -
+31 часа и 30 мин
+
+и остава Стани да каже колко часа му трябват 
+
+
+
+
+
+-->
